@@ -122,6 +122,7 @@ public class SignDetector {
 
                 Frame frame1 = openCVFrameConverter.convert(mat);
                 frameRecorder.setFrameNumber(i);
+                frameRecorder.setTimestamp(frameGrabber.getTimestamp());
                 frameRecorder.record(frame1);
 
                 mat.release();
@@ -131,8 +132,10 @@ public class SignDetector {
                 long end = System.currentTimeMillis();
                 long difference = end - start;
 
-                MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG,"Frame " + i + " of "
-                        + frameGrabber.getLengthInVideoFrames() + " done(" + difference + "ms).");
+                if(i % 100 == 0) {
+                    MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Frame " + i + " of "
+                            + frameGrabber.getLengthInVideoFrames() + " done(" + difference + "ms).");
+                }
 
             }
             frameRecorder.stop();
