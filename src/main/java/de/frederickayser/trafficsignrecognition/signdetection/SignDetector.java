@@ -1,6 +1,8 @@
 package de.frederickayser.trafficsignrecognition.signdetection;
 
 import de.frederickayser.trafficsignrecognition.TrafficSignRecognition;
+import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
+import de.frederickayser.trafficsignrecognition.image.DataPreparer;
 import de.frederickayser.trafficsignrecognition.image.ImageTransformer;
 import de.frederickayser.trafficsignrecognition.image.ImageUtil;
 import de.frederickayser.trafficsignrecognition.trafficsign.Probability;
@@ -13,6 +15,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -23,6 +27,8 @@ import java.util.Collections;
  * by Frederic on 02.05.20(14:35)
  */
 public class SignDetector {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SignDetector.class);
 
     private final File file;
     private final String outputPath;
@@ -46,7 +52,8 @@ public class SignDetector {
             frameRecorder.setSampleFormat(frameGrabber.getSampleFormat());
             frameRecorder.setSampleRate(frameGrabber.getSampleRate());
             frameRecorder.start();
-            for (int i = 0; i < frameGrabber.getFrameNumber(); i++) {
+            for (int i = 0; i < frameGrabber.getLengthInVideoFrames(); i++) {
+                long start = System.currentTimeMillis();
                 frameGrabber.setFrameNumber(i);
                 Frame frame = frameGrabber.grab();
                 BufferedImage bufferedImage = frameConverter.getBufferedImage(frame);
@@ -120,6 +127,13 @@ public class SignDetector {
                 mat.release();
                 gray.release();
                 circles.release();
+
+                long end = System.currentTimeMillis();
+                long difference = end - start;
+
+                MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG,"Frame " + i + " of "
+                        + frameGrabber.getLengthInVideoFrames() + " done(" + difference + "ms).");
+
             }
             frameRecorder.stop();
             frameGrabber.stop();

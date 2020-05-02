@@ -187,7 +187,7 @@ public class NeuralNetwork {
         if(bufferedImage.getWidth() != width || bufferedImage.getHeight() != height)
             throw new RuntimeException("Imagesize must be equal to size of input");
         ImageLoader imageLoader = new ImageLoader(height, width, channels);
-        return multiLayerNetwork.output(imageLoader.asMatrix(bufferedImage), false);
+        return multiLayerNetwork.output(imageLoader.asMatrix(bufferedImage).reshape(1, height, width, 1), false);
     }
 
 

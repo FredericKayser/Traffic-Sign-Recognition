@@ -18,6 +18,8 @@ public class MessageBuilder {
             logger.warn(message);
         else if(messageType.equals(MessageType.ERROR))
             logger.error(message);
+        else if(messageType.equals(MessageType.DEBUG))
+            logger.debug(message);
         ConsoleLogger.out.println("[" + dateString + " | " + messageType.toString() + "] " + message);
     }
 
@@ -33,6 +35,7 @@ public class MessageBuilder {
     public enum MessageType {
         INFO,
         WARNING,
+        DEBUG,
         ERROR;
     }
 
