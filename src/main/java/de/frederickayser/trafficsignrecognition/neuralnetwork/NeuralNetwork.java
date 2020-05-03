@@ -168,6 +168,9 @@ public class NeuralNetwork {
         multiLayerNetwork.fit(trainingSetIterator, epochs);
 
         File file = new File("neuralnetwork.zip");
+        if(file.exists()) {
+            file.delete();
+        }
         try {
             ModelSerializer.writeModel(multiLayerNetwork, file, true);
         } catch (IOException e) {

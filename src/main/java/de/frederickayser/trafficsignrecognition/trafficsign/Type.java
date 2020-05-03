@@ -16,7 +16,8 @@ public enum Type {
     EIGHTY_KMH_END("80kmhEnd", 6),
     OVERTAKE_FORBIDDEN("OvertakeForbidden", 7),
     SPEED_LIMIT_OVERTAKE_FORBIDDEN_END("SpeedLimitOvertakeForbiddenEnd",8),
-    OVERTAKE_FORBIDDEN_END("OvertakeForbiddenEnd", 9);
+    OVERTAKE_FORBIDDEN_END("OvertakeForbiddenEnd", 9),
+    UNDEFINED("undefined", 10);
 
     @Getter
     private String folder;
@@ -50,8 +51,9 @@ public enum Type {
                 return SPEED_LIMIT_OVERTAKE_FORBIDDEN_END;
             case "OvertakeForbiddenEnd":
                 return OVERTAKE_FORBIDDEN_END;
+            default:
+                return UNDEFINED;
         }
-        return null;
     }
 
     public static Type getTypeByID(int id) {
@@ -76,9 +78,10 @@ public enum Type {
                 return SPEED_LIMIT_OVERTAKE_FORBIDDEN_END;
             case 9:
                 return OVERTAKE_FORBIDDEN_END;
+            default:
+                return UNDEFINED;
 
         }
-        return null;
     }
 
 }
