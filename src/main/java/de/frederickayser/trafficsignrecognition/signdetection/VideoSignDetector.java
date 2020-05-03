@@ -39,11 +39,12 @@ public class VideoSignDetector extends SignDetector {
             frameRecorder.setSampleFormat(frameGrabber.getSampleFormat());
             frameRecorder.setSampleRate(frameGrabber.getSampleRate());
             frameRecorder.start();
+            int frameNumber = 0;
             for (int i = 0; i < frameGrabber.getLengthInVideoFrames(); i+=10) {
                 long start = System.currentTimeMillis();
                 frameGrabber.setFrameNumber(i);
                 Frame frame = frameGrabber.grab();
-                frameRecorder.setTimestamp(frameGrabber.getTimestamp());
+                frameRecorder.setFrameNumber(frameNumber++);
                 frameRecorder.record(editFrame(frameConverter.convert(frame), openCVFrameConverter, frameConverter));
 
 
