@@ -48,6 +48,7 @@ public class DataPreparer {
         for (int i = 0; i < files.length; i++) {
             if(!files[i].isDirectory()) {
                 if (!files[i].getName().endsWith("final.jpg")) {
+                    MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Converting file " + files[i].getName() + ".");
                     ImageTransformer imageTransformer = new ImageTransformer(files[i].getAbsolutePath());
                     imageTransformer.transform();
                 }

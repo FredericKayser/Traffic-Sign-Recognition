@@ -93,7 +93,7 @@ public abstract class SignDetector {
 
                     Imgproc.putText(mat, Type.getTypeByID(probabilities[0].getSignID()) + ": " +
                             (Util.round(probabilities[0].getProbability(), 2)*100) + "%",
-                            topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(255, 255, 255));
+                            topLeft, Core.FONT_HERSHEY_PLAIN, 0.3, new Scalar(255, 255, 255), 2);
                 }
             }
         }
