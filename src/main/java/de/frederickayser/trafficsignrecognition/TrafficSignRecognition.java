@@ -38,8 +38,8 @@ public class TrafficSignRecognition {
     public void run() {
         MessageBuilder.send(LOGGER, "System is starting...");
         ConfigurationHandler.getInstance().init();
-        Type.loadAllMats();
         System.load(ConfigurationHandler.getInstance().getOpenCVLibaryPath());
+        Type.loadAllMats();
         ImageTransformer.loadHighestIds();
         CommandHandler.getInstance().registerCommand("convertvideo", new ConvertVideoCommand());
         CommandHandler.getInstance().registerCommand("preparedataset", new PrepareDatasetCommand());
