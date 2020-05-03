@@ -5,6 +5,7 @@ import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
 import de.frederickayser.trafficsignrecognition.file.ConfigurationHandler;
 import de.frederickayser.trafficsignrecognition.image.ImageTransformer;
 import de.frederickayser.trafficsignrecognition.neuralnetwork.NeuralNetwork;
+import de.frederickayser.trafficsignrecognition.trafficsign.Type;
 import de.frederickayser.trafficsignrecognition.util.Setting;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -37,6 +38,7 @@ public class TrafficSignRecognition {
     public void run() {
         MessageBuilder.send(LOGGER, "System is starting...");
         ConfigurationHandler.getInstance().init();
+        Type.loadAllMats();
         System.load(ConfigurationHandler.getInstance().getOpenCVLibaryPath());
         ImageTransformer.loadHighestIds();
         CommandHandler.getInstance().registerCommand("convertvideo", new ConvertVideoCommand());

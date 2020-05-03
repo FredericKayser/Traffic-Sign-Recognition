@@ -66,10 +66,11 @@ public class NeuralNetwork {
         File file = new File("neuralnetwork.zip");
         if(file.exists()) {
             multiLayerNetwork = ModelSerializer.restoreMultiLayerNetwork(file);
+            MessageBuilder.send(LOGGER,"Network got load from file");
         } else {
 
 
-            MessageBuilder.send(LOGGER,"Network configuration and training...");
+            MessageBuilder.send(LOGGER,"Configuring network...");
             Map<Integer, Double> learningRateSchedule = new HashMap<>();
             learningRateSchedule.put(0, 0.06);
             learningRateSchedule.put(200, 0.05);
@@ -86,7 +87,7 @@ public class NeuralNetwork {
                     .layer(new ConvolutionLayer.Builder(3, 3)
                             .nIn(channels)
                             .stride(1, 1)
-                            .nOut(20)
+                            .nOut(32)
                             .activation(Activation.RELU)
                             .build())
                     .layer(new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
@@ -95,7 +96,7 @@ public class NeuralNetwork {
                             .build())
                     .layer(new ConvolutionLayer.Builder(3, 3)
                             .stride(1, 1) // nIn need not specified in later layers
-                            .nOut(50)
+                            .nOut(64)
                             .activation(Activation.RELU)
                             .build())
                     .layer(new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
@@ -104,7 +105,7 @@ public class NeuralNetwork {
                             .build())
                     .layer(new ConvolutionLayer.Builder(3, 3)
                             .stride(1, 1) // nIn need not specified in later layers
-                            .nOut(100)
+                            .nOut(128)
                             .activation(Activation.RELU)
                             .build())
                     .layer(new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
@@ -112,7 +113,10 @@ public class NeuralNetwork {
                             .stride(2, 2)
                             .build())
                     .layer(new DenseLayer.Builder().activation(Activation.RELU)
-                            .nOut(500)
+                            .nOut(128)
+                            .build())
+                    .layer(new DenseLayer.Builder().activation(Activation.RELU)
+                            .nOut(256)
                             .build())
                     .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
                             .nOut(outputAmount)
@@ -168,16 +172,6 @@ public class NeuralNetwork {
             throw new RuntimeException("Please load first the files in cache.");
         }
         multiLayerNetwork.fit(trainingSetIterator, epochs);
-
-        File file = new File("neuralnetwork.zip");
-        if(file.exists()) {
-            file.delete();
-        }
-        try {
-            ModelSerializer.writeModel(multiLayerNetwork, file, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void test() {
@@ -185,7 +179,23 @@ public class NeuralNetwork {
             throw new RuntimeException("Please load first the files in cache.");
         }
         Evaluation evaluation = multiLayerNetwork.evaluate(testSetIterator);
-        MessageBuilder.send(LOGGER, evaluation.stats());
+        File modelLogFolder = new File("oldmodels/");
+        int id = modelLogFolder.listFiles().length;
+        String name = "model-" + id + ".zip";
+        File saveFile = new File(name);
+        MessageBuilder.send(LOGGER, "Saved model under oldmodels/" + saveFile.getName() + evaluation.stats());
+
+        File file = new File("neuralnetwork.zip");
+        if(file.exists()) {
+            file.delete();
+        }
+        try {
+            ModelSerializer.writeModel(multiLayerNetwork, file, true);
+            ModelSerializer.writeModel(multiLayerNetwork, saveFile, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public INDArray output(BufferedImage bufferedImage) {

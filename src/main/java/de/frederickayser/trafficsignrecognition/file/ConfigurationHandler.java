@@ -68,6 +68,9 @@ public class ConfigurationHandler {
         new File(testPath + "SpeedLimitOvertakeForbiddenEnd/").mkdirs();
         new File(testPath + "undefined/").mkdirs();
 
+        new File("signs/").mkdirs();
+        new File("oldmodels/").mkdirs();
+
 
     }
 

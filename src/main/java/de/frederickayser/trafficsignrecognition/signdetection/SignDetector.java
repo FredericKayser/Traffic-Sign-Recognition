@@ -4,15 +4,13 @@ import de.frederickayser.trafficsignrecognition.TrafficSignRecognition;
 import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
 import de.frederickayser.trafficsignrecognition.image.ImageTransformer;
 import de.frederickayser.trafficsignrecognition.image.ImageUtil;
+import de.frederickayser.trafficsignrecognition.trafficsign.LimitationType;
 import de.frederickayser.trafficsignrecognition.trafficsign.Probability;
 import de.frederickayser.trafficsignrecognition.trafficsign.Type;
 import de.frederickayser.trafficsignrecognition.util.Util;
 import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.*;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +28,12 @@ public abstract class SignDetector {
 
     private final OpenCVFrameConverter openCVFrameConverter;
 
+    private Type speedLimit, overtakeLimit;
+
     public SignDetector() {
         openCVFrameConverter = new OpenCVFrameConverter.ToMat();
+        speedLimit = Type.FIFTY_KMH;
+        overtakeLimit = Type.OVERTAKE_FORBIDDEN_END;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SignDetector.class);
@@ -93,14 +95,38 @@ public abstract class SignDetector {
 
                 Type type = Type.getTypeByID(probabilities[0].getSignID());
 
-                if (probabilities[0].getProbability() > 0.8 && !type.equals(Type.UNDEFINED)) {
+                if (probabilities[0].getProbability() > 0.9 && !type.equals(Type.UNDEFINED)) {
 
                     Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
 
+                    for(int i = 0; i < type.getLimitationTypes().length; i++) {
+                        if(type.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
+                            speedLimit = type;
+                        } else if(type.getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
+                            overtakeLimit = type;
+                        }
+                    }
+
                     Imgproc.putText(mat, Type.getTypeByID(probabilities[0].getSignID()) + ": " +
                             (Util.round(probabilities[0].getProbability(), 2)*100) + "%",
-                            topLeft, Core.FONT_HERSHEY_PLAIN, 0.3, new Scalar(255, 255, 255), 2);
+                            topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0), 1);
                 }
+            }
+        }
+
+        for(int i = 0; i < speedLimit.getLimitationTypes().length; i++) {
+            if(speedLimit.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
+                Mat sign = speedLimit.getMats()[i];
+                Mat submat = mat.submat(new Rect(mat.rows()-512, mat.cols()-256, sign.rows(), sign.cols()));
+                sign.copyTo(submat);
+            }
+        }
+
+        for(int i = 0; i < overtakeLimit.getLimitationTypes().length; i++) {
+            if(overtakeLimit.getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
+                Mat sign = overtakeLimit.getMats()[i];
+                Mat submat = mat.submat(new Rect(mat.rows()-256, mat.cols()-256, sign.rows(), sign.cols()));
+                sign.copyTo(submat);
             }
         }
 
