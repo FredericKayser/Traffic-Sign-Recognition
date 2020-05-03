@@ -28,10 +28,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class SignDetector {
 
+    private final OpenCVFrameConverter openCVFrameConverter;
+
+    public SignDetector() {
+        openCVFrameConverter = new OpenCVFrameConverter.ToMat();
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SignDetector.class);
 
-    public Frame editFrame(BufferedImage bufferedImage, OpenCVFrameConverter openCVFrameConverter, Java2DFrameConverter frameConverter) {
-        Mat mat = ImageUtil.convertBufferedImageToMat(bufferedImage);
+    public Frame editFrame(BufferedImage bufferedImage, Frame frame) {
+        Mat mat = openCVFrameConverter.convertToOrgOpenCvCoreMat(frame);
         Mat gray = new Mat();
         Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY);
 

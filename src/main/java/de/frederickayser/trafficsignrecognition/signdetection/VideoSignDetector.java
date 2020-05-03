@@ -6,6 +6,7 @@ import org.bytedeco.javacv.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 
 /**
@@ -25,7 +26,6 @@ public class VideoSignDetector extends SignDetector {
 
     public void detect() {
         Java2DFrameConverter frameConverter = new Java2DFrameConverter();
-        OpenCVFrameConverter openCVFrameConverter = new OpenCVFrameConverter.ToMat();
         FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(file.getAbsolutePath());
         try {
             frameGrabber.start();
@@ -43,8 +43,9 @@ public class VideoSignDetector extends SignDetector {
                 Frame frame = frameGrabber.grab();
                 frameRecorder.setFrameNumber(frameGrabber.getFrameNumber());
                 frameRecorder.setTimestamp(frameGrabber.getTimestamp());
-                frameRecorder.record(editFrame(frameConverter.convert(frame), openCVFrameConverter, frameConverter));
-
+                BufferedImage bufferedImage = frameConverter.convert(frame);
+                Frame frame1 = editFrame(bufferedImage, frame);
+                frameRecorder.record(frame1);
 
                 long end = System.currentTimeMillis();
                 long difference = end - start;
