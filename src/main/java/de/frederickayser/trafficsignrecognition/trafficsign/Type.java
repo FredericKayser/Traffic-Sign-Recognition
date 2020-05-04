@@ -19,7 +19,7 @@ public enum Type {
     HUNDRET_KMH("100kmh", 0, new String[]{"signs/100kmh.jpg"}, new LimitationType[]{LimitationType.SPEEDLIMIT}, null),
     HUNDRET_TWENTY_KMH("120kmh", 1, new String[]{"signs/120kmh.jpg"}, new LimitationType[]{LimitationType.SPEEDLIMIT}, null),
     THIRTY_KMH("30kmh", 2, new String[]{"signs/30kmh.jpg"}, new LimitationType[]{LimitationType.SPEEDLIMIT},null),
-    FIFTY_KMH("50kmh", 3, new String[]{"50kmh.jpg"}, new LimitationType[]{LimitationType.SPEEDLIMIT},null),
+    FIFTY_KMH("50kmh", 3, new String[]{"signs/50kmh.jpg"}, new LimitationType[]{LimitationType.SPEEDLIMIT},null),
     SEVENTY_KMH("70kmh", 4, new String[]{"signs/70kmh.jpg"}, new LimitationType[]{LimitationType.SPEEDLIMIT},null),
     EIGHTY_KMH("80kmh", 5, new String[]{"signs/80kmh.jpg"}, new LimitationType[]{LimitationType.SPEEDLIMIT},null),
     EIGHTY_KMH_END("80kmhEnd", 6, new String[]{"signs/100kmh.jpg"}, new LimitationType[]{LimitationType.SPEEDLIMIT},null),
