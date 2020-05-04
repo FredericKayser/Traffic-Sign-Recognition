@@ -66,7 +66,7 @@ public class NeuralNetwork {
         File file = new File("neuralnetwork.zip");
         if(file.exists()) {
             multiLayerNetwork = ModelSerializer.restoreMultiLayerNetwork(file);
-            MessageBuilder.send(LOGGER,"Network got load from file");
+            MessageBuilder.send(LOGGER,"Network load from file");
         } else {
 
 

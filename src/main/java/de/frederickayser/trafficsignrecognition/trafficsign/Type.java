@@ -1,5 +1,6 @@
 package de.frederickayser.trafficsignrecognition.trafficsign;
 
+import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
 import de.frederickayser.trafficsignrecognition.image.ImageUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -52,10 +53,12 @@ public enum Type {
         if(signImageNames != null) {
             mats = new Mat[signImageNames.length];
             for(int i = 0; i < signImageNames.length; i++) {
+                MessageBuilder.send(MessageBuilder.MessageType.DEBUG, "Loading sign image "+ signImageNames[i]);
                 BufferedImage bufferedImage = ImageIO.read(new File(signImageNames[i]));
                 bufferedImage = ImageUtil.cropImage(bufferedImage);
                 bufferedImage = ImageUtil.scaleImage(bufferedImage, 256, 256);
                 mats[i] = ImageUtil.convertBufferedImageToMat(bufferedImage);
+                MessageBuilder.send(MessageBuilder.MessageType.DEBUG, "Sign image " + signImageNames[i] + " loaded.");
             }
         }
     }
