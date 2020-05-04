@@ -6,6 +6,7 @@ import de.frederickayser.trafficsignrecognition.image.ImageTransformer;
 import de.frederickayser.trafficsignrecognition.image.ImageUtil;
 import de.frederickayser.trafficsignrecognition.trafficsign.LimitationType;
 import de.frederickayser.trafficsignrecognition.trafficsign.Probability;
+import de.frederickayser.trafficsignrecognition.trafficsign.Sign;
 import de.frederickayser.trafficsignrecognition.trafficsign.Type;
 import de.frederickayser.trafficsignrecognition.util.Util;
 import org.bytedeco.ffmpeg.global.avcodec;
@@ -17,8 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class SignDetector {
 
     private final OpenCVFrameConverter openCVFrameConverter;
+    private final HashMap<Integer, Sign> signConfirmer = new HashMap<>();
 
     private Type speedLimit, overtakeLimit;
 
@@ -34,11 +35,22 @@ public abstract class SignDetector {
         openCVFrameConverter = new OpenCVFrameConverter.ToMat();
         speedLimit = Type.FIFTY_KMH;
         overtakeLimit = Type.OVERTAKE_FORBIDDEN_END;
+        signConfirmer.put(Type.HUNDRET_KMH.getId(), new Sign(Type.HUNDRET_KMH));
+        signConfirmer.put(Type.HUNDRET_TWENTY_KMH.getId(), new Sign(Type.HUNDRET_TWENTY_KMH));
+        signConfirmer.put(Type.THIRTY_KMH.getId(), new Sign(Type.THIRTY_KMH));
+        signConfirmer.put(Type.FIFTY_KMH.getId(), new Sign(Type.FIFTY_KMH));
+        signConfirmer.put(Type.SEVENTY_KMH.getId(), new Sign(Type.SEVENTY_KMH));
+        signConfirmer.put(Type.EIGHTY_KMH.getId(), new Sign(Type.EIGHTY_KMH));
+        signConfirmer.put(Type.EIGHTY_KMH_END.getId(), new Sign(Type.EIGHTY_KMH_END));
+        signConfirmer.put(Type.OVERTAKE_FORBIDDEN.getId(), new Sign(Type.OVERTAKE_FORBIDDEN));
+        signConfirmer.put(Type.OVERTAKE_FORBIDDEN_END.getId(), new Sign(Type.OVERTAKE_FORBIDDEN_END));
+        signConfirmer.put(Type.SPEED_LIMIT_OVERTAKE_FORBIDDEN_END.getId(), new Sign(Type.SPEED_LIMIT_OVERTAKE_FORBIDDEN_END));
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SignDetector.class);
 
     public Frame editFrame(BufferedImage bufferedImage, Frame frame) {
+        List<Integer> seen = new ArrayList<>();
         Mat mat = openCVFrameConverter.convertToOrgOpenCvCoreMat(frame);
         Mat gray = new Mat();
         Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY);
@@ -46,7 +58,7 @@ public abstract class SignDetector {
         Imgproc.medianBlur(gray, gray, 5);
 
         Mat circles = new Mat();
-        Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0, (gray.rows() / 5), 100, 33, 5, 50);
+        Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0, (gray.rows() / 5), 100, 33, 8, 50);
 
         for (int x = 0; x < circles.cols(); x++) {
             double[] c = circles.get(0, x);
@@ -99,13 +111,7 @@ public abstract class SignDetector {
 
                     Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
 
-                    for(int i = 0; i < type.getLimitationTypes().length; i++) {
-                        if(type.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
-                            speedLimit = type;
-                        } else if(type.getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
-                            overtakeLimit = type;
-                        }
-                    }
+                    seen.add(type.getId());
 
                     Imgproc.putText(mat, Type.getTypeByID(probabilities[0].getSignID()) + ": " +
                             (Util.round(probabilities[0].getProbability(), 2)*100) + "%",
@@ -114,11 +120,26 @@ public abstract class SignDetector {
             }
         }
 
+        for(int id : signConfirmer.keySet()) {
+            if(seen.contains(id)) {
+                signConfirmer.get(id).seen();
+                if(signConfirmer.get(id).isConfirmed()) {
+                    for(int i = 0; i < signConfirmer.get(id).getType().getLimitationTypes().length; i++) {
+                        if(signConfirmer.get(id).getType().getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
+                            speedLimit = signConfirmer.get(id).getType();
+                        } else if(signConfirmer.get(id).getType().getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
+                            overtakeLimit = signConfirmer.get(id).getType();
+                        }
+                    }
+                }
+            } else {
+                signConfirmer.get(id).notSeen();
+            }
+        }
+
         for(int i = 0; i < speedLimit.getLimitationTypes().length; i++) {
             if(speedLimit.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
                 Mat sign = speedLimit.getMats()[i];
-                MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Mat size - x: " + mat.rows() + ", y: " + mat.cols());
-                MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Sign size - x: " + sign.rows() + ", y: " + sign.cols());
                 Mat submat = mat.submat(new Rect(mat.cols()-(sign.cols()*2), mat.rows()-sign.rows(), sign.rows(), sign.cols()));
                 sign.copyTo(submat);
             }
@@ -127,8 +148,6 @@ public abstract class SignDetector {
         for(int i = 0; i < overtakeLimit.getLimitationTypes().length; i++) {
             if(overtakeLimit.getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
                 Mat sign = overtakeLimit.getMats()[i];
-                MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Mat size - x: " + mat.rows() + ", y: " + mat.cols());
-                MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Sign size - x: " + sign.rows() + ", y: " + sign.cols());
                 Mat submat = mat.submat(new Rect(mat.cols()-sign.cols(), mat.rows()-sign.rows(), sign.rows(), sign.cols()));
                 sign.copyTo(submat);
             }
