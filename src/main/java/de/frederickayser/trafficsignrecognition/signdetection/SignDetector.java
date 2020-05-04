@@ -119,7 +119,7 @@ public abstract class SignDetector {
                 Mat sign = speedLimit.getMats()[i];
                 MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Mat size - x: " + mat.rows() + ", y: " + mat.cols());
                 MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Sign size - x: " + sign.rows() + ", y: " + sign.cols());
-                Mat submat = mat.submat(new Rect(mat.rows()-(sign.rows()*2)-1, mat.cols()-sign.cols()-1, sign.rows(), sign.cols()));
+                Mat submat = mat.submat(new Rect(mat.cols()-(sign.cols()*2), mat.rows()-sign.rows(), sign.rows(), sign.cols()));
                 sign.copyTo(submat);
             }
         }
@@ -129,7 +129,7 @@ public abstract class SignDetector {
                 Mat sign = overtakeLimit.getMats()[i];
                 MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Mat size - x: " + mat.rows() + ", y: " + mat.cols());
                 MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "Sign size - x: " + sign.rows() + ", y: " + sign.cols());
-                Mat submat = mat.submat(new Rect(mat.rows()-sign.rows()-1, mat.cols()-sign.cols()-1, sign.rows(), sign.cols()));
+                Mat submat = mat.submat(new Rect(mat.cols()-sign.cols(), mat.rows()-sign.rows(), sign.rows(), sign.cols()));
                 sign.copyTo(submat);
             }
         }
