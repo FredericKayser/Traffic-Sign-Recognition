@@ -1,6 +1,5 @@
 package de.frederickayser.trafficsignrecognition.neuralnetwork;
 
-import de.frederickayser.trafficsignrecognition.TrafficSignRecognition;
 import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
 import de.frederickayser.trafficsignrecognition.file.ConfigurationHandler;
 import org.datavec.api.io.labels.ParentPathLabelGenerator;
@@ -8,8 +7,6 @@ import org.datavec.api.split.FileSplit;
 import org.datavec.image.loader.ImageLoader;
 import org.datavec.image.loader.NativeImageLoader;
 import org.datavec.image.recordreader.ImageRecordReader;
-import org.deeplearning4j.core.storage.StatsStorageRouter;
-import org.deeplearning4j.core.storage.impl.RemoteUIStatsStorageRouter;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -21,9 +18,6 @@ import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.parallelism.ParallelInference;
-import org.deeplearning4j.ui.api.UIServer;
-import org.deeplearning4j.ui.model.stats.StatsListener;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
@@ -53,7 +47,6 @@ public class NeuralNetwork {
     private static final Logger LOGGER = LoggerFactory.getLogger(NeuralNetwork.class);
 
     private MultiLayerNetwork multiLayerNetwork;
-    private ParallelInference parallelInference;
 
     private final int width, height, channels, outputAmount;
     private Random randNumGen;
@@ -134,15 +127,9 @@ public class NeuralNetwork {
             multiLayerNetwork = new MultiLayerNetwork(conf);
             multiLayerNetwork.init();
         }
-        UIServer uiServer = UIServer.getInstance();
-        uiServer.enableRemoteListener();
 
-        StatsStorageRouter remoteUIRouter = new RemoteUIStatsStorageRouter("http://localhost:9000");
+        multiLayerNetwork.setListeners(new ScoreIterationListener(1));
 
-
-        multiLayerNetwork.setListeners(new StatsListener(remoteUIRouter), new ScoreIterationListener(1));
-
-        parallelInference = new ParallelInference.Builder(multiLayerNetwork).build();
     }
 
     public void loadFilesInCache(int batchSize) {
@@ -179,15 +166,6 @@ public class NeuralNetwork {
         testSetIterator = testIter;
     }
 
-    public void stopUIServer() {
-        UIServer uiServer = UIServer.getInstance();
-        uiServer.disableRemoteListener();
-        try {
-            uiServer.stop();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
 
     public void train(int epochs) {
@@ -229,7 +207,7 @@ public class NeuralNetwork {
         ImageLoader imageLoader = new ImageLoader(height, width, channels);
         INDArray indArray = imageLoader.asMatrix(bufferedImage).reshape(1, 1, height, width);
 
-        return parallelInference.output(indArray);
+        return multiLayerNetwork.output(indArray);
     }
 
 
