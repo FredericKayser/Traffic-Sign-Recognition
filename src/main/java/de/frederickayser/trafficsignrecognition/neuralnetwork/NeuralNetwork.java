@@ -182,7 +182,7 @@ public class NeuralNetwork {
         File modelLogFolder = new File("oldmodels/");
         int id = modelLogFolder.listFiles().length;
         String name = "model-" + id + ".zip";
-        File saveFile = new File(name);
+        File saveFile = new File("oldmodels/" + name);
         MessageBuilder.send(LOGGER, "Saved model under oldmodels/" + saveFile.getName() + evaluation.stats());
 
         File file = new File("neuralnetwork.zip");

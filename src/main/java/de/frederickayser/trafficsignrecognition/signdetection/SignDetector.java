@@ -117,7 +117,7 @@ public abstract class SignDetector {
         for(int i = 0; i < speedLimit.getLimitationTypes().length; i++) {
             if(speedLimit.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
                 Mat sign = speedLimit.getMats()[i];
-                Mat submat = mat.submat(new Rect(mat.rows()-512, mat.cols()-256, sign.rows(), sign.cols()));
+                Mat submat = mat.submat(new Rect(mat.rows()-(sign.rows()*2), mat.cols()-sign.cols(), sign.rows(), sign.cols()));
                 sign.copyTo(submat);
             }
         }
@@ -125,7 +125,7 @@ public abstract class SignDetector {
         for(int i = 0; i < overtakeLimit.getLimitationTypes().length; i++) {
             if(overtakeLimit.getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
                 Mat sign = overtakeLimit.getMats()[i];
-                Mat submat = mat.submat(new Rect(mat.rows()-256, mat.cols()-256, sign.rows(), sign.cols()));
+                Mat submat = mat.submat(new Rect(mat.rows()-sign.rows(), mat.cols()-sign.cols(), sign.rows(), sign.cols()));
                 sign.copyTo(submat);
             }
         }
