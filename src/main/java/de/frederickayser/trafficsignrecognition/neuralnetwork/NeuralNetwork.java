@@ -8,6 +8,8 @@ import org.datavec.api.split.FileSplit;
 import org.datavec.image.loader.ImageLoader;
 import org.datavec.image.loader.NativeImageLoader;
 import org.datavec.image.recordreader.ImageRecordReader;
+import org.deeplearning4j.core.storage.StatsStorageRouter;
+import org.deeplearning4j.core.storage.impl.RemoteUIStatsStorageRouter;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -19,6 +21,9 @@ import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.parallelism.ParallelInference;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.model.stats.StatsListener;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
@@ -48,6 +53,7 @@ public class NeuralNetwork {
     private static final Logger LOGGER = LoggerFactory.getLogger(NeuralNetwork.class);
 
     private MultiLayerNetwork multiLayerNetwork;
+    private ParallelInference parallelInference;
 
     private final int width, height, channels, outputAmount;
     private Random randNumGen;
@@ -127,8 +133,16 @@ public class NeuralNetwork {
 
             multiLayerNetwork = new MultiLayerNetwork(conf);
             multiLayerNetwork.init();
-            multiLayerNetwork.setListeners(new ScoreIterationListener(1));
         }
+        UIServer uiServer = UIServer.getInstance();
+        uiServer.enableRemoteListener();
+
+        StatsStorageRouter remoteUIRouter = new RemoteUIStatsStorageRouter("http://localhost:9000");
+
+
+        multiLayerNetwork.setListeners(new StatsListener(remoteUIRouter), new ScoreIterationListener(1));
+
+        parallelInference = new ParallelInference.Builder(multiLayerNetwork).build();
     }
 
     public void loadFilesInCache(int batchSize) {
@@ -144,7 +158,7 @@ public class NeuralNetwork {
         DataSetIterator trainIter = new RecordReaderDataSetIterator(trainRR, batchSize, 1, outputAmount);
 
         // pixel values from 0-255 to 0-1 (min-max scaling)
-        DataNormalization scaler = new ImagePreProcessingScaler(0, 1);
+        DataNormalization scaler = new ImagePreProcessingScaler();
         scaler.fit(trainIter);
         trainIter.setPreProcessor(scaler);
 
@@ -160,18 +174,28 @@ public class NeuralNetwork {
             e.printStackTrace();
         }
         DataSetIterator testIter = new RecordReaderDataSetIterator(testRR, batchSize, 1, outputAmount);
-
-        scaler.fit(testIter);
         testIter.setPreProcessor(scaler);
 
         testSetIterator = testIter;
     }
+
+    public void stopUIServer() {
+        UIServer uiServer = UIServer.getInstance();
+        uiServer.disableRemoteListener();
+        try {
+            uiServer.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void train(int epochs) {
         if(trainingSetIterator == null) {
             throw new RuntimeException("Please load first the files in cache.");
         }
         multiLayerNetwork.fit(trainingSetIterator, epochs);
+        trainingSetIterator.reset();
     }
 
     public void test() {
@@ -179,6 +203,7 @@ public class NeuralNetwork {
             throw new RuntimeException("Please load first the files in cache.");
         }
         Evaluation evaluation = multiLayerNetwork.evaluate(testSetIterator);
+        testSetIterator.reset();
         File modelLogFolder = new File("oldmodels/");
         int id = modelLogFolder.listFiles().length;
         String name = "model-" + id + ".zip";
@@ -202,7 +227,9 @@ public class NeuralNetwork {
         if(bufferedImage.getWidth() != width || bufferedImage.getHeight() != height)
             throw new RuntimeException("Imagesize must be equal to size of input");
         ImageLoader imageLoader = new ImageLoader(height, width, channels);
-        return multiLayerNetwork.output(imageLoader.asMatrix(bufferedImage).reshape(1, 1, height, width), false);
+        INDArray indArray = imageLoader.asMatrix(bufferedImage).reshape(1, 1, height, width);
+
+        return parallelInference.output(indArray);
     }
 
 
