@@ -107,7 +107,7 @@ public abstract class SignDetector {
 
                 Type type = Type.getTypeByID(probabilities[0].getSignID());
 
-                if (probabilities[0].getProbability() > 0.9 && !type.equals(Type.UNDEFINED)) {
+                if (probabilities[0].getProbability() > 0.6 && !type.equals(Type.UNDEFINED)) {
 
                     Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
 
