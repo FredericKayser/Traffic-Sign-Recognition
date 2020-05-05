@@ -25,7 +25,7 @@ public class Sign {
     }
 
     public boolean isConfirmed() {
-        return seen >= 3;
+        return seen >= 5;
     }
 
 }
