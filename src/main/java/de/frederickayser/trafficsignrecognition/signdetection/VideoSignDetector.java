@@ -33,7 +33,7 @@ public class VideoSignDetector extends SignDetector {
                     frameGrabber.getImageWidth(), frameGrabber.getImageHeight(), frameGrabber.getAudioChannels());
             frameRecorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
             frameRecorder.setFormat("mp4");
-            frameRecorder.setFrameRate(frameGrabber.getVideoFrameRate());
+            frameRecorder.setFrameRate(5);
             frameRecorder.setSampleFormat(frameGrabber.getSampleFormat());
             frameRecorder.setSampleRate(frameGrabber.getSampleRate());
             frameRecorder.start();
