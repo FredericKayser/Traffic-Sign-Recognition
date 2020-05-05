@@ -53,7 +53,9 @@ public class NeuralNetwork {
 
     private DataSetIterator trainingSetIterator, testSetIterator;
 
-    public NeuralNetwork(int width, int height, int channels, int outputAmount) throws IOException {
+    private DataNormalization dataNormalization;
+
+    public NeuralNetwork(int width, int height, int channels, int outputAmount, int batchSize) throws IOException {
         this.width = width;
         this.height = height;
         this.channels = channels;
@@ -129,6 +131,8 @@ public class NeuralNetwork {
         }
 
         multiLayerNetwork.setListeners(new ScoreIterationListener(1));
+        dataNormalization = new ImagePreProcessingScaler();
+        loadFilesInCache(batchSize);
 
     }
 
@@ -145,9 +149,8 @@ public class NeuralNetwork {
         DataSetIterator trainIter = new RecordReaderDataSetIterator(trainRR, batchSize, 1, outputAmount);
 
         // pixel values from 0-255 to 0-1 (min-max scaling)
-        DataNormalization scaler = new ImagePreProcessingScaler();
-        scaler.fit(trainIter);
-        trainIter.setPreProcessor(scaler);
+        dataNormalization.fit(trainIter);
+        trainIter.setPreProcessor(dataNormalization);
 
         trainingSetIterator = trainIter;
 
@@ -161,7 +164,7 @@ public class NeuralNetwork {
             e.printStackTrace();
         }
         DataSetIterator testIter = new RecordReaderDataSetIterator(testRR, batchSize, 1, outputAmount);
-        testIter.setPreProcessor(scaler);
+        testIter.setPreProcessor(dataNormalization);
 
         testSetIterator = testIter;
     }
@@ -206,7 +209,7 @@ public class NeuralNetwork {
             throw new RuntimeException("Imagesize must be equal to size of input");
         ImageLoader imageLoader = new ImageLoader(height, width, channels);
         INDArray indArray = imageLoader.asMatrix(bufferedImage).reshape(1, 1, height, width);
-
+        dataNormalization.transform(indArray);
         return multiLayerNetwork.output(indArray);
     }
 

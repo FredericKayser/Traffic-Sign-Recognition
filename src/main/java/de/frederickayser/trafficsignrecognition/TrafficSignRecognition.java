@@ -48,7 +48,7 @@ public class TrafficSignRecognition {
         CommandHandler.getInstance().start();
 
         try {
-            neuralNetwork = new NeuralNetwork(Setting.IMAGE_SIZE, Setting.IMAGE_SIZE, 1, 11);
+            neuralNetwork = new NeuralNetwork(Setting.IMAGE_SIZE, Setting.IMAGE_SIZE, 1, 11, 200);
         } catch (IOException e) {
             e.printStackTrace();
         }
