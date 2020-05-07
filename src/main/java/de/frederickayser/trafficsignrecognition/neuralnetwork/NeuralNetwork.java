@@ -143,7 +143,7 @@ public class NeuralNetwork {
                             .nIn(512)
                             .nOut(128)
                             .build())
-                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) //create hidden layer
+                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.XENT) //create hidden layer
                             .activation(Activation.SIGMOID)
                             .nOut(outputAmount)
                             .build())
