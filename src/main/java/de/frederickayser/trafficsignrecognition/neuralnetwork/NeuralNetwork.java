@@ -25,6 +25,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
+import org.nd4j.linalg.learning.config.Nadam;
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.nd4j.linalg.schedule.MapSchedule;
@@ -72,7 +73,7 @@ public class NeuralNetwork {
 
 
             MessageBuilder.send(LOGGER,"Configuring network...");
-            Map<Integer, Double> learningRateSchedule = new HashMap<>();
+            /*Map<Integer, Double> learningRateSchedule = new HashMap<>();
             learningRateSchedule.put(0, 0.06);
             learningRateSchedule.put(200, 0.05);
             learningRateSchedule.put(600, 0.028);
@@ -124,6 +125,29 @@ public class NeuralNetwork {
                             .activation(Activation.SOFTMAX)
                             .build())
                     .setInputType(InputType.convolutionalFlat(height, width, channels)) // InputType.convolutional for normal image
+                    .build();*/
+
+
+            MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+                    .seed(seed) //include a random seed for reproducibility
+                    .activation(Activation.RELU)
+                    .weightInit(WeightInit.XAVIER)
+                    .updater(new Nadam())
+                    .l2(0.000007) // regularize learning model
+                    .list()
+                    .layer(new DenseLayer.Builder() //create the first input layer.
+                            .nIn(width * height)
+                            .nOut(512)
+                            .build())
+                    .layer(new DenseLayer.Builder() //create the second input layer
+                            .nIn(512)
+                            .nOut(128)
+                            .build())
+                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) //create hidden layer
+                            .activation(Activation.SIGMOID)
+                            .nOut(outputAmount)
+                            .build())
+                    .setInputType(InputType.convolutional(height, width, 1))
                     .build();
 
             multiLayerNetwork = new MultiLayerNetwork(conf);
