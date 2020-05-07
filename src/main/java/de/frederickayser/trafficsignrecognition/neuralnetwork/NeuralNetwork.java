@@ -133,7 +133,7 @@ public class NeuralNetwork {
                     .activation(Activation.RELU)
                     .weightInit(WeightInit.XAVIER)
                     .updater(new Nadam())
-                    .l2(0.000007) // regularize learning model
+                    .l2(0.0005) // regularize learning model
                     .list()
                     .layer(new DenseLayer.Builder() //create the first input layer.
                             .nIn(width * height)
@@ -141,10 +141,14 @@ public class NeuralNetwork {
                             .build())
                     .layer(new DenseLayer.Builder() //create the second input layer
                             .nIn(512)
+                            .nOut(256)
+                            .build())
+                    .layer(new DenseLayer.Builder() //create the second input layer
+                            .nIn(256)
                             .nOut(128)
                             .build())
-                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.XENT) //create hidden layer
-                            .activation(Activation.SIGMOID)
+                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) //create hidden layer
+                            .activation(Activation.SOFTMAX)
                             .nOut(outputAmount)
                             .build())
                     .setInputType(InputType.convolutional(height, width, 1))
