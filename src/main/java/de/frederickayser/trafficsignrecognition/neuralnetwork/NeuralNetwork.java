@@ -138,18 +138,22 @@ public class NeuralNetwork {
                     .layer(new DenseLayer.Builder() //create the first input layer.
                             .nIn(width * height)
                             .nOut(512)
+                            .name("Hiddenschicht 1")
                             .build())
                     .layer(new DenseLayer.Builder() //create the second input layer
                             .nIn(512)
                             .nOut(256)
+                            .name("Hiddenschicht 2")
                             .build())
                     .layer(new DenseLayer.Builder() //create the second input layer
                             .nIn(256)
                             .nOut(128)
+                            .name("Hiddenschicht 3")
                             .build())
-                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) //create hidden layer
-                            .activation(Activation.SOFTMAX)
+                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.MSE) //create hidden layer
+                            .activation(Activation.SIGMOID)
                             .nOut(outputAmount)
+                            .name("Outputschicht")
                             .build())
                     .setInputType(InputType.convolutional(height, width, 1))
                     .build();
