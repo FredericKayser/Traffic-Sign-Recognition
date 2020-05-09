@@ -150,8 +150,8 @@ public class NeuralNetwork {
                             .nOut(128)
                             .name("Hiddenschicht 3")
                             .build())
-                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.MSE) //create hidden layer
-                            .activation(Activation.SIGMOID)
+                    .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) //create hidden layer
+                            .activation(Activation.SOFTMAX)
                             .nOut(outputAmount)
                             .name("Outputschicht")
                             .build())
