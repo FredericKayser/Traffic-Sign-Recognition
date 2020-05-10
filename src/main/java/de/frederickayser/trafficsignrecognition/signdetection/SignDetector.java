@@ -107,7 +107,7 @@ public abstract class SignDetector {
 
                 Type type = Type.getTypeByID(probabilities[0].getSignID());
 
-                if (!type.equals(Type.UNDEFINED)) {
+                //if (!type.equals(Type.UNDEFINED)) {
 
                     Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
 
@@ -116,7 +116,7 @@ public abstract class SignDetector {
                     Imgproc.putText(mat, Type.getTypeByID(probabilities[0].getSignID()) + ": " +
                             (Util.round(probabilities[0].getProbability(), 2)*100) + "%",
                             topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0), 1);
-                }
+                //}
             }
         }
 
