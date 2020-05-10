@@ -145,11 +145,6 @@ public class NeuralNetwork {
                             .nOut(256)
                             .name("Hiddenschicht 2")
                             .build())
-                    .layer(new DenseLayer.Builder() //create the second input layer
-                            .nIn(256)
-                            .nOut(128)
-                            .name("Hiddenschicht 3")
-                            .build())
                     .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) //create hidden layer
                             .activation(Activation.SOFTMAX)
                             .nOut(outputAmount)

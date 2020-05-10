@@ -100,7 +100,7 @@ public abstract class SignDetector {
 
                 double[] output = TrafficSignRecognition.getInstance().getNeuralNetwork().output(transformedImage).toDoubleVector();
                 Probability[] probabilities = new Probability[output.length];
-                MessageBuilder.send(MessageBuilder.MessageType.DEBUG, Arrays.toString(output));
+                //MessageBuilder.send(MessageBuilder.MessageType.DEBUG, Arrays.toString(output));
                 for (int j = 0; j < output.length; j++) {
                     probabilities[j] = new Probability(j, output[j]);
                 }
