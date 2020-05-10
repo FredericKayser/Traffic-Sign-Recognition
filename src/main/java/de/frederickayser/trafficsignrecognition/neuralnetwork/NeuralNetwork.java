@@ -164,7 +164,7 @@ public class NeuralNetwork {
     }
 
     public void loadFilesInCache(int batchSize) {
-        File trainData = new File(ConfigurationHandler.getInstance().getTrainingPath());
+        File trainData = new File(ConfigurationHandler.getInstance().getTrainingPath() + "/images/");
         FileSplit trainSplit = new FileSplit(trainData, NativeImageLoader.ALLOWED_FORMATS, randNumGen);
         ParentPathLabelGenerator labelMaker = new ParentPathLabelGenerator(); // use parent directory name as the image label
         ImageRecordReader trainRR = new ImageRecordReader(height, width, channels, labelMaker);
@@ -182,7 +182,7 @@ public class NeuralNetwork {
         trainingSetIterator = trainIter;
 
         // vectorization of test data
-        File testData = new File(ConfigurationHandler.getInstance().getTestPath());
+        File testData = new File(ConfigurationHandler.getInstance().getTestPath() + "/images/");
         FileSplit testSplit = new FileSplit(testData, NativeImageLoader.ALLOWED_FORMATS, randNumGen);
         ImageRecordReader testRR = new ImageRecordReader(height, width, channels, labelMaker);
         try {
