@@ -12,7 +12,7 @@ import lombok.Getter;
 public class Probability implements Comparable<Probability>{
 
     private final int signID;
-    private final float probability;
+    private final double probability;
 
     /**
      * Compares this object with the specified object for order.  Returns a

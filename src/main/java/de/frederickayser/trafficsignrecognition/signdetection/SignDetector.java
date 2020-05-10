@@ -16,8 +16,10 @@ import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,6 +32,8 @@ public abstract class SignDetector {
     private final HashMap<Integer, Sign> signConfirmer = new HashMap<>();
 
     private Type speedLimit, overtakeLimit;
+
+    private int counter = 0;
 
     public SignDetector() {
         openCVFrameConverter = new OpenCVFrameConverter.ToMat();
@@ -94,7 +98,13 @@ public abstract class SignDetector {
                 ImageTransformer imageTransformer = new ImageTransformer(smallImage);
                 BufferedImage transformedImage = imageTransformer.transformWithoutSaving();
 
-                float[] output = TrafficSignRecognition.getInstance().getNeuralNetwork().output(transformedImage).toFloatVector();
+                try {
+                    ImageIO.write(transformedImage, "jpg", new File("imgs/" + (counter++) + ".jpg"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                double[] output = TrafficSignRecognition.getInstance().getNeuralNetwork().output(transformedImage).toDoubleVector();
                 Probability[] probabilities = new Probability[output.length];
                 for (int j = 0; j < output.length; j++) {
                     probabilities[j] = new Probability(j, output[j]);
