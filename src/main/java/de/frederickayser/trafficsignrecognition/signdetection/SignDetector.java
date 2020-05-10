@@ -98,14 +98,9 @@ public abstract class SignDetector {
                 ImageTransformer imageTransformer = new ImageTransformer(smallImage);
                 BufferedImage transformedImage = imageTransformer.transformWithoutSaving();
 
-                try {
-                    ImageIO.write(transformedImage, "jpg", new File("imgs/" + (counter++) + ".jpg"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
                 double[] output = TrafficSignRecognition.getInstance().getNeuralNetwork().output(transformedImage).toDoubleVector();
                 Probability[] probabilities = new Probability[output.length];
+                MessageBuilder.send(MessageBuilder.MessageType.DEBUG, Arrays.toString(output));
                 for (int j = 0; j < output.length; j++) {
                     probabilities[j] = new Probability(j, output[j]);
                 }
@@ -124,7 +119,7 @@ public abstract class SignDetector {
                     seen.add(type.getId());
 
                     Imgproc.putText(mat, Type.getTypeByID(probabilities[0].getSignID()) + ": " +
-                            (Util.round(probabilities[0].getProbability(), 2)*100) + "%",
+                            probabilities[0].getProbability() + "%",
                             topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0), 1);
                 //}
             }
