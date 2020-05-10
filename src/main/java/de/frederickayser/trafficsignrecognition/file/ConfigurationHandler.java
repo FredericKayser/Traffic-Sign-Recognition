@@ -50,7 +50,7 @@ public class ConfigurationHandler {
         new File(trainingPath + "OvertakeForbidden/").mkdirs();
         new File(trainingPath + "OvertakeForbiddenEnd/").mkdirs();
         new File(trainingPath + "SpeedLimitOvertakeForbiddenEnd/").mkdirs();
-        //new File(trainingPath + "undefined/").mkdirs();
+        new File(trainingPath + "undefined/").mkdirs();
 
         String testPath = getTestPath();
         new File(testPath + "images/").mkdirs();
@@ -66,7 +66,7 @@ public class ConfigurationHandler {
         new File(testPath + "OvertakeForbidden/").mkdirs();
         new File(testPath + "OvertakeForbiddenEnd/").mkdirs();
         new File(testPath + "SpeedLimitOvertakeForbiddenEnd/").mkdirs();
-        //new File(testPath + "undefined/").mkdirs();
+        new File(testPath + "undefined/").mkdirs();
 
         new File("signs/").mkdirs();
         new File("oldmodels/").mkdirs();
