@@ -22,6 +22,7 @@ import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.api.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
@@ -73,7 +74,7 @@ public class NeuralNetwork {
 
 
             MessageBuilder.send(LOGGER,"Configuring network...");
-            /*Map<Integer, Double> learningRateSchedule = new HashMap<>();
+            Map<Integer, Double> learningRateSchedule = new HashMap<>();
             learningRateSchedule.put(0, 0.06);
             learningRateSchedule.put(200, 0.05);
             learningRateSchedule.put(600, 0.028);
@@ -125,10 +126,10 @@ public class NeuralNetwork {
                             .activation(Activation.SOFTMAX)
                             .build())
                     .setInputType(InputType.convolutionalFlat(height, width, channels)) // InputType.convolutional for normal image
-                    .build();*/
+                    .build();
 
 
-            MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+            /*MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                     .seed(seed) //include a random seed for reproducibility
                     .activation(Activation.RELU)
                     .weightInit(WeightInit.XAVIER)
@@ -151,7 +152,7 @@ public class NeuralNetwork {
                             .name("Outputschicht")
                             .build())
                     .setInputType(InputType.convolutional(height, width, 1))
-                    .build();
+                    .build();*/
 
             multiLayerNetwork = new MultiLayerNetwork(conf);
             multiLayerNetwork.init();
@@ -236,9 +237,7 @@ public class NeuralNetwork {
             throw new RuntimeException("Imagesize must be equal to size of input");
         ImageLoader imageLoader = new ImageLoader(height, width, channels);
         INDArray indArray = imageLoader.asMatrix(bufferedImage).reshape(1, 1, height, width);
-        MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "prev: " + indArray.toStringFull());
         dataNormalization.transform(indArray);
-        MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "after: " + indArray.toStringFull());
         return multiLayerNetwork.output(indArray);
     }
 
