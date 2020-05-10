@@ -110,15 +110,20 @@ public abstract class SignDetector {
                 Point topLeft = new Point(x1, y1);
                 Point rightBot = new Point(x2, y2);
 
-                Type type = Type.getTypeByID(probabilities[0].getSignID());
+                Type type;
 
+                if(probabilities[0].getProbability() > 0.6) {
+                    type = Type.getTypeByID(probabilities[0].getSignID());
+                } else {
+                    type = Type.UNDEFINED;
+                }
                 //if (!type.equals(Type.UNDEFINED)) {
 
                     Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
 
                     seen.add(type.getId());
 
-                    Imgproc.putText(mat, Type.getTypeByID(probabilities[0].getSignID()) + ": " +
+                    Imgproc.putText(mat, type + ": " +
                             probabilities[0].getProbability() + "%",
                             topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0), 1);
                 //}
