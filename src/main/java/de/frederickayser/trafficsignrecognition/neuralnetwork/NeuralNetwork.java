@@ -236,6 +236,9 @@ public class NeuralNetwork {
             throw new RuntimeException("Imagesize must be equal to size of input");
         ImageLoader imageLoader = new ImageLoader(height, width, channels);
         INDArray indArray = imageLoader.asMatrix(bufferedImage).reshape(1, 1, height, width);
+        MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "prev: " + indArray.toStringFull());
+        dataNormalization.transform(indArray);
+        MessageBuilder.send(LOGGER, MessageBuilder.MessageType.DEBUG, "after: " + indArray.toStringFull());
         return multiLayerNetwork.output(indArray);
     }
 
