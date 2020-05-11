@@ -13,10 +13,6 @@ public class Util {
         return Math.round(Math.pow(10.0, frac) * value) / Math.pow(10.0, frac);
     }
 
-    public static double round(float value, int frac) {
-        return Math.round((float) (Math.pow(10.0, frac) * value)) / Math.pow(10.0, frac);
-    }
-
 
     public static BufferedImage cropImage(BufferedImage bufferedImage) {
         int width = bufferedImage.getWidth();

@@ -10,22 +10,26 @@ public class Sign {
     @Getter
     private final Type type;
     private int seen;
+    private double probability = 0;
 
     public Sign(Type type) {
         this.type = type;
         this.seen = 0;
     }
 
-    public void seen() {
+    public void seen(double probability) {
         seen++;
+        this.probability += probability;
     }
 
-    public void notSeen() {
+    public void reset()
+    {
         seen = 0;
+        probability = 0;
     }
 
-    public boolean isConfirmed() {
-        return seen >= 3;
+    public double getProbability() {
+        return (probability/(double)seen);
     }
 
 }

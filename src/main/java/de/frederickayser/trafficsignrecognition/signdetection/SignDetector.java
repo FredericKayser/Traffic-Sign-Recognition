@@ -8,6 +8,7 @@ import de.frederickayser.trafficsignrecognition.trafficsign.LimitationType;
 import de.frederickayser.trafficsignrecognition.trafficsign.Probability;
 import de.frederickayser.trafficsignrecognition.trafficsign.Sign;
 import de.frederickayser.trafficsignrecognition.trafficsign.Type;
+import de.frederickayser.trafficsignrecognition.util.Tuple;
 import de.frederickayser.trafficsignrecognition.util.Util;
 import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.*;
@@ -33,7 +34,7 @@ public abstract class SignDetector {
 
     private Type speedLimit, overtakeLimit;
 
-    private int counter = 0;
+    private int noSignSeen = 0, signSeen = 0;
 
     public SignDetector() {
         openCVFrameConverter = new OpenCVFrameConverter.ToMat();
@@ -54,7 +55,6 @@ public abstract class SignDetector {
     private static final Logger LOGGER = LoggerFactory.getLogger(SignDetector.class);
 
     public Frame editFrame(BufferedImage bufferedImage, Frame frame) {
-        List<Integer> seen = new ArrayList<>();
         Mat mat = openCVFrameConverter.convertToOrgOpenCvCoreMat(frame);
         Mat gray = new Mat();
         Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY);
@@ -111,34 +111,62 @@ public abstract class SignDetector {
                 Point rightBot = new Point(x2, y2);
 
                 Type type = Type.getTypeByID(probabilities[0].getSignID());
-                if (!type.equals(Type.UNDEFINED)) {
+                if (!type.equals(Type.UNDEFINED) && probabilities[0].getProbability() > 0.3) {
 
                     Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
 
-                    seen.add(type.getId());
+                    String percentage = String.valueOf(Util.round(probabilities[0].getProbability(), 4)*100);
+
 
                     Imgproc.putText(mat, type + ": " +
-                                    (Util.round(probabilities[0].getProbability(), 4)*100) + "%",
+                                   percentage + "%",
                             topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0), 1);
+                    signSeen++;
+                } else {
+                    noSignSeen++;
+                }
+
+
+                for(int i = 0; i < probabilities.length; i++) {
+                    Type signType = Type.getTypeByID(probabilities[i].getSignID());
+                    if (!signType.equals(Type.UNDEFINED)) {
+                        if (probabilities[i].getProbability() > 0.3) {
+                            signConfirmer.get(signType.getId()).seen(probabilities[i].getProbability());
+                        }
+                    }
                 }
             }
         }
 
-        for(int id : signConfirmer.keySet()) {
-            if(seen.contains(id)) {
-                signConfirmer.get(id).seen();
-                if(signConfirmer.get(id).isConfirmed()) {
-                    for(int i = 0; i < signConfirmer.get(id).getType().getLimitationTypes().length; i++) {
-                        if(signConfirmer.get(id).getType().getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
-                            speedLimit = signConfirmer.get(id).getType();
-                        } else if(signConfirmer.get(id).getType().getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
-                            overtakeLimit = signConfirmer.get(id).getType();
+
+        if(noSignSeen > 10 && signSeen > 5) {
+            Tuple<Type, Double> speedLimit = new Tuple<>(null, 0D);
+            Tuple<Type, Double> overtakeLimit = new Tuple<>(null, 0D);
+            for(int id : signConfirmer.keySet()) {
+                Sign sign = signConfirmer.get(id);
+                sign.reset();
+                Type type = sign.getType();
+                for(int i = 0; i < type.getLimitationTypes().length; i++) {
+                    if(type.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
+                        if(speedLimit.getB() < sign.getProbability()) {
+                            speedLimit = new Tuple<>(type, sign.getProbability());
+                        }
+                    } else if(type.getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
+                        if(overtakeLimit.getB() < sign.getProbability()) {
+                            overtakeLimit = new Tuple<>(type, sign.getProbability());
                         }
                     }
                 }
-            } else {
-                signConfirmer.get(id).notSeen();
             }
+
+            if(speedLimit.getA() != null) {
+                this.speedLimit = speedLimit.getA();
+            }
+            if(overtakeLimit.getB() != null) {
+                this.overtakeLimit = overtakeLimit.getA();
+            }
+            noSignSeen = 0;
+            signSeen = 0;
         }
 
         for(int i = 0; i < speedLimit.getLimitationTypes().length; i++) {
