@@ -163,7 +163,7 @@ public abstract class SignDetector {
             if(speedLimit.getA() != null) {
                 this.speedLimit = speedLimit.getA();
             }
-            if(overtakeLimit.getB() != null) {
+            if(overtakeLimit.getA() != null) {
                 this.overtakeLimit = overtakeLimit.getA();
             }
             noSignSeen = 0;
