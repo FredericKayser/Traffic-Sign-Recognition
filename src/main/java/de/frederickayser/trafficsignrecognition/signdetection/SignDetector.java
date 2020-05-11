@@ -122,6 +122,7 @@ public abstract class SignDetector {
                                    percentage + "%",
                             topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0), 1);
                     signSeen++;
+                    noSignSeen = 0;
                 } else {
                     noSignSeen++;
                 }
