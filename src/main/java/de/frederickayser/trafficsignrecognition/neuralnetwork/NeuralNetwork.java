@@ -133,8 +133,8 @@ public class NeuralNetwork {
                     .seed(seed) //include a random seed for reproducibility
                     .activation(Activation.RELU)
                     .weightInit(WeightInit.XAVIER)
-                    .updater(new Nadam())
-                    .l2(0.0005) // regularize learning model
+                    .updater(new Nesterovs(0.006, 0.9))
+                    .l2(1e-4) // regularize learning model
                     .list()
                     .layer(new DenseLayer.Builder() //create the first input layer.
                             .nIn(width * height)
