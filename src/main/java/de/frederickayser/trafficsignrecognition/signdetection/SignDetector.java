@@ -2,6 +2,7 @@ package de.frederickayser.trafficsignrecognition.signdetection;
 
 import de.frederickayser.trafficsignrecognition.TrafficSignRecognition;
 import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
+import de.frederickayser.trafficsignrecognition.file.ConfigurationHandler;
 import de.frederickayser.trafficsignrecognition.image.ImageTransformer;
 import de.frederickayser.trafficsignrecognition.image.ImageUtil;
 import de.frederickayser.trafficsignrecognition.trafficsign.LimitationType;
@@ -74,19 +75,19 @@ public abstract class SignDetector {
             x2 = (int) center.x + radius;
             y2 = (int) center.y + radius;
 
-            x1 = (int) (x1 - ((x2 - x1) * 0.4));
+            x1 = (int) (x1 - ((x2 - x1) * ConfigurationHandler.getInstance().getCircleMultiplier()));
             if (x1 < 0) {
                 x1 = 0;
             }
-            y1 = (int) (y1 - ((y2 - y1) * 0.4));
+            y1 = (int) (y1 - ((y2 - y1) * ConfigurationHandler.getInstance().getCircleMultiplier()));
             if (y1 < 0) {
                 y1 = 0;
             }
-            x2 = (int) (x2 + ((x2 - x1) * 0.4));
+            x2 = (int) (x2 + ((x2 - x1) * ConfigurationHandler.getInstance().getCircleMultiplier()));
             if (x2 > bufferedImage.getWidth()) {
                 x2 = bufferedImage.getWidth();
             }
-            y2 = (int) (y2 + ((y2 - y1) * 0.4));
+            y2 = (int) (y2 + ((y2 - y1) * ConfigurationHandler.getInstance().getCircleMultiplier()));
             if (y2 > bufferedImage.getHeight()) {
                 y2 = bufferedImage.getHeight();
             }
@@ -109,7 +110,7 @@ public abstract class SignDetector {
                 Point rightBot = new Point(x2, y2);
 
                 Type type = Type.getTypeByID(probabilities[0].getSignID());
-                if (!type.equals(Type.UNDEFINED) && probabilities[0].getProbability() > 0.3) {
+                if (!type.equals(Type.UNDEFINED) && probabilities[0].getProbability() > 0.1) {
 
                     Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
 

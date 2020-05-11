@@ -14,6 +14,8 @@ public class ConfigurationHandler {
 
     private JsonFile jsonFile;
 
+    private double circleMultiplier;
+
     public static ConfigurationHandler getInstance() {
         if(configurationHandler == null)
             configurationHandler = new ConfigurationHandler();
@@ -31,6 +33,7 @@ public class ConfigurationHandler {
             dataObject.put("trainingpath", "data/trainingset/");
             dataObject.put("testpath", "data/testset/");
             jsonFile.getJsonObject().put("opencv_lib_path", "/home/pi/opencv/build/lib/libopencv_java342.so");
+            jsonFile.getJsonObject().put("circleMultiplier", 0.2);
             jsonFile.getJsonObject().put("data", dataObject);
             save();
         } else {
@@ -70,6 +73,7 @@ public class ConfigurationHandler {
 
         new File("signs/").mkdirs();
         new File("oldmodels/").mkdirs();
+        circleMultiplier = jsonFile.getJsonObject().getDouble("circlemultiplier");
 
 
     }
@@ -86,6 +90,11 @@ public class ConfigurationHandler {
     }
 
     public String getOpenCVLibaryPath() { return jsonFile.getJsonObject().getString("opencv_lib_path"); }
+
+    public double getCircleMultiplier() {
+
+        return circleMultiplier;
+    }
 
 
 }
