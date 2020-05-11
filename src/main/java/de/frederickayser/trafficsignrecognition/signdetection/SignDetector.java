@@ -34,8 +34,6 @@ public abstract class SignDetector {
 
     private Type speedLimit, overtakeLimit;
 
-    private int noSignSeen = 0, signSeen = 0;
-
     public SignDetector() {
         openCVFrameConverter = new OpenCVFrameConverter.ToMat();
         speedLimit = Type.FIFTY_KMH;
@@ -76,19 +74,19 @@ public abstract class SignDetector {
             x2 = (int) center.x + radius;
             y2 = (int) center.y + radius;
 
-            x1 = (int) (x1 - ((x2 - x1) * 0.2));
+            x1 = (int) (x1 - ((x2 - x1) * 0.4));
             if (x1 < 0) {
                 x1 = 0;
             }
-            y1 = (int) (y1 - ((y2 - y1) * 0.2));
+            y1 = (int) (y1 - ((y2 - y1) * 0.4));
             if (y1 < 0) {
                 y1 = 0;
             }
-            x2 = (int) (x2 + ((x2 - x1) * 0.2));
+            x2 = (int) (x2 + ((x2 - x1) * 0.4));
             if (x2 > bufferedImage.getWidth()) {
                 x2 = bufferedImage.getWidth();
             }
-            y2 = (int) (y2 + ((y2 - y1) * 0.2));
+            y2 = (int) (y2 + ((y2 - y1) * 0.4));
             if (y2 > bufferedImage.getHeight()) {
                 y2 = bufferedImage.getHeight();
             }
@@ -121,54 +119,32 @@ public abstract class SignDetector {
                     Imgproc.putText(mat, type + ": " +
                                    percentage + "%",
                             topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0), 1);
-                    signSeen++;
-                    noSignSeen = 0;
-                } else {
-                    noSignSeen++;
+                    signConfirmer.get(type.getId()).seen();
                 }
 
 
-                for(int i = 0; i < probabilities.length; i++) {
-                    Type signType = Type.getTypeByID(probabilities[i].getSignID());
-                    if (!signType.equals(Type.UNDEFINED)) {
-                        if (probabilities[i].getProbability() > 0.3) {
-                            signConfirmer.get(signType.getId()).seen(probabilities[i].getProbability());
-                        }
-                    }
-                }
+
             }
         }
 
 
-        if(noSignSeen > 10 && signSeen > 5) {
-            Tuple<Type, Double> speedLimit = new Tuple<>(null, 0D);
-            Tuple<Type, Double> overtakeLimit = new Tuple<>(null, 0D);
-            for(int id : signConfirmer.keySet()) {
-                Sign sign = signConfirmer.get(id);
-                sign.reset();
-                Type type = sign.getType();
-                for(int i = 0; i < type.getLimitationTypes().length; i++) {
-                    if(type.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
-                        if(speedLimit.getB() < sign.getProbability()) {
-                            speedLimit = new Tuple<>(type, sign.getProbability());
-                        }
-                    } else if(type.getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
-                        if(overtakeLimit.getB() < sign.getProbability()) {
-                            overtakeLimit = new Tuple<>(type, sign.getProbability());
-                        }
+        for(int id : signConfirmer.keySet()) {
+            Sign sign = signConfirmer.get(id);
+            if(sign.isConfirmed()) {
+                for(int i = 0; i < sign.getType().getLimitationTypes().length; i++) {
+                    if(sign.getType().getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
+                        speedLimit = sign.getType();
+                    } else if(sign.getType().getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
+                        overtakeLimit = sign.getType();
                     }
                 }
             }
-
-            if(speedLimit.getA() != null) {
-                this.speedLimit = speedLimit.getA();
+            if(!sign.isChanged()) {
+                sign.notSeen();
             }
-            if(overtakeLimit.getA() != null) {
-                this.overtakeLimit = overtakeLimit.getA();
-            }
-            noSignSeen = 0;
-            signSeen = 0;
+            signConfirmer.get(id).reset();
         }
+
 
         for(int i = 0; i < speedLimit.getLimitationTypes().length; i++) {
             if(speedLimit.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
