@@ -22,6 +22,7 @@ public class Sign {
     public void seen()
     {
         seen++;
+        notSeen = 0;
         changed = true;
     }
 
