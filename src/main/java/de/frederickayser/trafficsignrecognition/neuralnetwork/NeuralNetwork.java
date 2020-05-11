@@ -81,7 +81,7 @@ public class NeuralNetwork {
             learningRateSchedule.put(800, 0.0060);
             learningRateSchedule.put(1000, 0.001);
 
-            MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+            /*MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                     .seed(seed)
                     .l2(0.0005) // ridge regression value
                     .updater(new Nesterovs(new MapSchedule(ScheduleType.ITERATION, learningRateSchedule)))
@@ -126,10 +126,10 @@ public class NeuralNetwork {
                             .activation(Activation.SOFTMAX)
                             .build())
                     .setInputType(InputType.convolutionalFlat(height, width, channels)) // InputType.convolutional for normal image
-                    .build();
+                    .build();*/
 
 
-            /*MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+            MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                     .seed(seed) //include a random seed for reproducibility
                     .activation(Activation.RELU)
                     .weightInit(WeightInit.XAVIER)
@@ -152,7 +152,7 @@ public class NeuralNetwork {
                             .name("Outputschicht")
                             .build())
                     .setInputType(InputType.convolutional(height, width, 1))
-                    .build();*/
+                    .build();
 
             multiLayerNetwork = new MultiLayerNetwork(conf);
             multiLayerNetwork.init();
@@ -235,8 +235,13 @@ public class NeuralNetwork {
     public INDArray output(BufferedImage bufferedImage) {
         if(bufferedImage.getWidth() != width || bufferedImage.getHeight() != height)
             throw new RuntimeException("Imagesize must be equal to size of input");
-        ImageLoader imageLoader = new ImageLoader(height, width, channels);
-        INDArray indArray = imageLoader.asMatrix(bufferedImage).reshape(1, 1, height, width);
+        NativeImageLoader imageLoader = new NativeImageLoader(height, width, channels);
+        INDArray indArray = null;
+        try {
+            indArray = imageLoader.asMatrix(bufferedImage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         dataNormalization.transform(indArray);
         return multiLayerNetwork.output(indArray);
     }
