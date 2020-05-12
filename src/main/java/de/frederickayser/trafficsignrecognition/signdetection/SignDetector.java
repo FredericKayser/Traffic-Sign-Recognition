@@ -1,29 +1,24 @@
 package de.frederickayser.trafficsignrecognition.signdetection;
 
 import de.frederickayser.trafficsignrecognition.TrafficSignRecognition;
-import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
 import de.frederickayser.trafficsignrecognition.file.ConfigurationHandler;
 import de.frederickayser.trafficsignrecognition.image.ImageTransformer;
-import de.frederickayser.trafficsignrecognition.image.ImageUtil;
 import de.frederickayser.trafficsignrecognition.trafficsign.LimitationType;
 import de.frederickayser.trafficsignrecognition.trafficsign.Probability;
 import de.frederickayser.trafficsignrecognition.trafficsign.Sign;
 import de.frederickayser.trafficsignrecognition.trafficsign.Type;
-import de.frederickayser.trafficsignrecognition.util.Tuple;
 import de.frederickayser.trafficsignrecognition.util.Util;
-import org.bytedeco.ffmpeg.global.avcodec;
-import org.bytedeco.javacv.*;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * by Frederic on 02.05.20(14:35)
@@ -62,6 +57,8 @@ public abstract class SignDetector {
 
         Mat circles = new Mat();
         Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0, (gray.rows() / 5), 100, 33, 8, 50);
+
+
 
         for (int x = 0; x < circles.cols(); x++) {
             double[] c = circles.get(0, x);

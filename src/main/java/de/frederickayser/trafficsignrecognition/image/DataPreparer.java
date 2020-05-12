@@ -4,12 +4,11 @@ import de.frederickayser.trafficsignrecognition.command.TrainCommand;
 import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
 import de.frederickayser.trafficsignrecognition.file.ConfigurationHandler;
 import de.frederickayser.trafficsignrecognition.trafficsign.Type;
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.FrameGrabber;
-import org.bytedeco.javacv.Java2DFrameConverter;
+import org.bytedeco.javacv.*;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +30,41 @@ public class DataPreparer {
         if (dataPreparer == null)
             dataPreparer = new DataPreparer();
         return dataPreparer;
+    }
+
+    public void addFrameNumbersToVideo(String input, String output) {
+        OpenCVFrameConverter openCVFrameConverter = new OpenCVFrameConverter.ToMat();
+        FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(new File(input).getAbsolutePath());
+        try {
+            frameGrabber.start();
+            FFmpegFrameRecorder frameRecorder = new FFmpegFrameRecorder(output,
+                    frameGrabber.getImageWidth(), frameGrabber.getImageHeight(), frameGrabber.getAudioChannels());
+            frameRecorder.setVideoCodec(frameGrabber.getVideoCodec());
+            frameRecorder.setFormat(frameGrabber.getFormat());
+            frameRecorder.setFrameRate(frameGrabber.getVideoFrameRate());
+            frameRecorder.setSampleFormat(frameGrabber.getSampleFormat());
+            frameRecorder.setSampleRate(frameGrabber.getSampleRate());
+            frameRecorder.setVideoBitrate(frameGrabber.getVideoBitrate());
+            frameRecorder.start();
+            for (int i = 0; i < frameGrabber.getLengthInVideoFrames(); i++) {
+                frameGrabber.setFrameNumber(i);
+                Frame frame = frameGrabber.grab();
+                frameRecorder.setFrameNumber(i);
+                frameRecorder.setTimestamp(frameGrabber.getTimestamp());
+                Mat mat = openCVFrameConverter.convertToOrgOpenCvCoreMat(frame);
+                Point topLeft = new Point(mat.cols()-200, mat.rows()-50);
+                Point botRight = new Point(mat.cols(), mat.rows());
+                Imgproc.rectangle(mat, topLeft, botRight, new Scalar(255, 255, 255), -1);
+                Imgproc.putText(mat, "", new Point(mat.cols()-180, mat.rows()-10), Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0));
+                frameRecorder.record(openCVFrameConverter.convert(mat));
+            }
+            frameRecorder.stop();
+            frameGrabber.stop();
+        } catch (FrameGrabber.Exception e) {
+            e.printStackTrace();
+        } catch (FrameRecorder.Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void prepareTrainingDataset() {
