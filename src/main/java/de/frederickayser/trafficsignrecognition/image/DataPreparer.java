@@ -55,7 +55,7 @@ public class DataPreparer {
                 Point topLeft = new Point(mat.cols()-200, mat.rows()-50);
                 Point botRight = new Point(mat.cols(), mat.rows());
                 Imgproc.rectangle(mat, topLeft, botRight, new Scalar(255, 255, 255), -1);
-                Imgproc.putText(mat, "", new Point(mat.cols()-180, mat.rows()-10), Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0));
+                Imgproc.putText(mat, i + "/" + frameGrabber.getLengthInVideoFrames(), new Point(mat.cols()-180, mat.rows()-10), Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0));
                 frameRecorder.record(openCVFrameConverter.convert(mat));
             }
             frameRecorder.stop();
