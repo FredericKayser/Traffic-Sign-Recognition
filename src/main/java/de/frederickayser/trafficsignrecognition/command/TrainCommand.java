@@ -14,18 +14,16 @@ public class TrainCommand implements Command {
 
     @Override
     public void execute(String[] strings) {
-        if(strings.length == 4) {
+        if(strings.length == 3) {
             int epochs = Integer.valueOf(strings[1]);
             int evaluations = Integer.valueOf(strings[2]);
-            int batchSize = Integer.valueOf(strings[3]);
             MessageBuilder.send(LOGGER, "Started to train the neural network. This can take up to many hours.");
-            TrafficSignRecognition.getInstance().getNeuralNetwork().loadFilesInCache(batchSize);
             for(int i = 0; i < evaluations; i++) {
                 TrafficSignRecognition.getInstance().getNeuralNetwork().train(epochs);
                 TrafficSignRecognition.getInstance().getNeuralNetwork().test();
             }
             MessageBuilder.send(LOGGER, "Finished training of neural network.");
         } else
-            MessageBuilder.send(LOGGER, MessageBuilder.MessageType.ERROR, "Wrong syntax. train <epochs to evaluation> <evalutions> <batchsize>");
+            MessageBuilder.send(LOGGER, MessageBuilder.MessageType.ERROR, "Wrong syntax. train <epochs to evaluation> <evalutions>");
     }
 }

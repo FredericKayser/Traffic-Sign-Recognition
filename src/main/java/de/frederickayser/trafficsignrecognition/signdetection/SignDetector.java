@@ -1,133 +1,170 @@
 package de.frederickayser.trafficsignrecognition.signdetection;
 
 import de.frederickayser.trafficsignrecognition.TrafficSignRecognition;
+import de.frederickayser.trafficsignrecognition.file.ConfigurationHandler;
 import de.frederickayser.trafficsignrecognition.image.ImageTransformer;
-import de.frederickayser.trafficsignrecognition.image.ImageUtil;
+import de.frederickayser.trafficsignrecognition.trafficsign.LimitationType;
 import de.frederickayser.trafficsignrecognition.trafficsign.Probability;
+import de.frederickayser.trafficsignrecognition.trafficsign.Sign;
 import de.frederickayser.trafficsignrecognition.trafficsign.Type;
 import de.frederickayser.trafficsignrecognition.util.Util;
-import org.bytedeco.ffmpeg.global.avcodec;
-import org.bytedeco.javacv.*;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * by Frederic on 02.05.20(14:35)
  */
-public class SignDetector {
+public abstract class SignDetector {
 
-    private final File file;
-    private final String outputPath;
+    private final OpenCVFrameConverter openCVFrameConverter;
+    private final HashMap<Integer, Sign> signConfirmer = new HashMap<>();
 
-    public SignDetector(String filePath, String outputPath) {
-        this.file = new File(filePath);
-        this.outputPath = outputPath;
+    private Type speedLimit, overtakeLimit;
+
+    public SignDetector() {
+        openCVFrameConverter = new OpenCVFrameConverter.ToMat();
+        speedLimit = Type.FIFTY_KMH;
+        overtakeLimit = Type.OVERTAKE_FORBIDDEN_END;
+        signConfirmer.put(Type.HUNDRET_KMH.getId(), new Sign(Type.HUNDRET_KMH));
+        signConfirmer.put(Type.HUNDRET_TWENTY_KMH.getId(), new Sign(Type.HUNDRET_TWENTY_KMH));
+        signConfirmer.put(Type.THIRTY_KMH.getId(), new Sign(Type.THIRTY_KMH));
+        signConfirmer.put(Type.FIFTY_KMH.getId(), new Sign(Type.FIFTY_KMH));
+        signConfirmer.put(Type.SEVENTY_KMH.getId(), new Sign(Type.SEVENTY_KMH));
+        signConfirmer.put(Type.EIGHTY_KMH.getId(), new Sign(Type.EIGHTY_KMH));
+        signConfirmer.put(Type.EIGHTY_KMH_END.getId(), new Sign(Type.EIGHTY_KMH_END));
+        signConfirmer.put(Type.OVERTAKE_FORBIDDEN.getId(), new Sign(Type.OVERTAKE_FORBIDDEN));
+        signConfirmer.put(Type.OVERTAKE_FORBIDDEN_END.getId(), new Sign(Type.OVERTAKE_FORBIDDEN_END));
+        signConfirmer.put(Type.SPEED_LIMIT_OVERTAKE_FORBIDDEN_END.getId(), new Sign(Type.SPEED_LIMIT_OVERTAKE_FORBIDDEN_END));
     }
 
-    public void detect() {
-        Java2DFrameConverter frameConverter = new Java2DFrameConverter();
-        OpenCVFrameConverter openCVFrameConverter = new OpenCVFrameConverter.ToMat();
-        FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(file.getAbsolutePath());
-        try {
-            frameGrabber.start();
-            FFmpegFrameRecorder frameRecorder = new FFmpegFrameRecorder(outputPath,
-                    frameGrabber.getImageWidth(), frameGrabber.getImageHeight(), frameGrabber.getAudioChannels());
-            frameRecorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
-            frameRecorder.setFormat("mp4");
-            frameRecorder.setFrameRate(frameGrabber.getFrameRate());
-            frameRecorder.setSampleFormat(frameGrabber.getSampleFormat());
-            frameRecorder.setSampleRate(frameGrabber.getSampleRate());
-            frameRecorder.start();
-            for (int i = 0; i < frameGrabber.getFrameNumber(); i++) {
-                frameGrabber.setFrameNumber(i);
-                Frame frame = frameGrabber.grab();
-                BufferedImage bufferedImage = frameConverter.getBufferedImage(frame);
-                Mat mat = ImageUtil.convertBufferedImageToMat(bufferedImage);
-                Mat gray = new Mat();
-                Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SignDetector.class);
 
-                Imgproc.medianBlur(gray, gray, 5);
+    public Frame editFrame(BufferedImage bufferedImage, Frame frame) {
+        Mat mat = openCVFrameConverter.convertToOrgOpenCvCoreMat(frame);
+        Mat gray = new Mat();
+        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY);
 
-                Mat circles = new Mat();
-                Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0, (gray.rows() / 5), 100, 33, 5, 50);
+        Imgproc.medianBlur(gray, gray, 5);
 
-                for (int x = 0; x < circles.cols(); x++) {
-                    double[] c = circles.get(0, x);
-                    Point center = new Point(Math.round(c[0]), Math.round(c[1]));
+        Mat circles = new Mat();
+        Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0, (gray.rows() / 5), 100, 33, 8, 50);
 
-                    int radius = (int) Math.round(c[2]);
-                    int x1, y1, x2, y2;
-                    x1 = (int) center.x - radius;
-                    y1 = (int) center.y - radius;
 
-                    x2 = (int) center.x + radius;
-                    y2 = (int) center.y + radius;
 
-                    x1 = (int) (x1 - ((x2 - x1) * 0.2));
-                    if (x1 < 0) {
-                        x1 = 0;
-                    }
-                    y1 = (int) (y1 - ((y2 - y1) * 0.2));
-                    if (y1 < 0) {
-                        y1 = 0;
-                    }
-                    x2 = (int) (x2 + ((x2 - x1) * 0.2));
-                    if (x2 > bufferedImage.getWidth()) {
-                        x2 = bufferedImage.getWidth();
-                    }
-                    y2 = (int) (y2 + ((y2 - y1) * 0.2));
-                    if (y2 > bufferedImage.getHeight()) {
-                        y2 = bufferedImage.getHeight();
-                    }
+        for (int x = 0; x < circles.cols(); x++) {
+            double[] c = circles.get(0, x);
+            Point center = new Point(Math.round(c[0]), Math.round(c[1]));
 
-                    if (!((x2 - x1) <= 0 || (y2 - y1) <= 0)) {
-                        BufferedImage smallImage = bufferedImage.getSubimage(x1, y1, (x2 - x1), (y2 - y1));
-                        ImageTransformer imageTransformer = new ImageTransformer(smallImage);
-                        BufferedImage transformedImage = imageTransformer.transformWithoutSaving();
+            int radius = (int) Math.round(c[2]);
+            int x1, y1, x2, y2;
+            x1 = (int) center.x - radius;
+            y1 = (int) center.y - radius;
 
-                        float[] output = TrafficSignRecognition.getInstance().getNeuralNetwork().output(transformedImage).toFloatVector();
-                        Probability[] probabilities = new Probability[output.length];
-                        for (int j = 0; j < output.length; j++) {
-                            probabilities[j] = new Probability(j, output[j]);
-                        }
+            x2 = (int) center.x + radius;
+            y2 = (int) center.y + radius;
 
-                        Arrays.sort(probabilities, Collections.reverseOrder());
+            x1 = (int) (x1 - ((x2 - x1) * ConfigurationHandler.getInstance().getCircleMultiplier()));
+            if (x1 < 0) {
+                x1 = 0;
+            }
+            y1 = (int) (y1 - ((y2 - y1) * ConfigurationHandler.getInstance().getCircleMultiplier()));
+            if (y1 < 0) {
+                y1 = 0;
+            }
+            x2 = (int) (x2 + ((x2 - x1) * ConfigurationHandler.getInstance().getCircleMultiplier()));
+            if (x2 > bufferedImage.getWidth()) {
+                x2 = bufferedImage.getWidth();
+            }
+            y2 = (int) (y2 + ((y2 - y1) * ConfigurationHandler.getInstance().getCircleMultiplier()));
+            if (y2 > bufferedImage.getHeight()) {
+                y2 = bufferedImage.getHeight();
+            }
 
-                        Point topLeft = new Point(x1, y1);
-                        Point rightBot = new Point(x2, y2);
+            if (!((x2 - x1) <= 0 || (y2 - y1) <= 0)) {
+                BufferedImage smallImage = bufferedImage.getSubimage(x1, y1, (x2 - x1), (y2 - y1));
+                ImageTransformer imageTransformer = new ImageTransformer(smallImage);
+                BufferedImage transformedImage = imageTransformer.transformWithoutSaving();
 
-                        if (probabilities[0].getProbability() > 0.8) {
-
-                            Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
-                            Imgproc.putText(mat, Type.getTypeByID(probabilities[0].getSignID()) + ": " +
-                                    (Util.round(probabilities[0].getProbability(), 2)*100) + "%", topLeft, 0, 5, new Scalar(255, 255, 255));
-                        }
-                    }
+                double[] output = TrafficSignRecognition.getInstance().getNeuralNetwork().output(transformedImage).toDoubleVector();
+                Probability[] probabilities = new Probability[output.length];
+                //MessageBuilder.send(MessageBuilder.MessageType.DEBUG, Arrays.toString(output));
+                for (int j = 0; j < output.length; j++) {
+                    probabilities[j] = new Probability(j, output[j]);
                 }
 
-                Frame frame1 = openCVFrameConverter.convert(mat);
-                frameRecorder.setFrameNumber(i);
-                frameRecorder.record(frame1);
+                Arrays.sort(probabilities, Collections.reverseOrder());
 
-                mat.release();
-                gray.release();
-                circles.release();
+                Point topLeft = new Point(x1, y1);
+                Point rightBot = new Point(x2, y2);
+
+                Type type = Type.getTypeByID(probabilities[0].getSignID());
+                if (!type.equals(Type.UNDEFINED) && probabilities[0].getProbability() > 0.6) {
+
+                    Imgproc.rectangle(mat, topLeft, rightBot, new Scalar(255, 255, 0), 3);
+
+                    String percentage = String.valueOf(Util.round(probabilities[0].getProbability(), 4)*100);
+
+
+                    Imgproc.putText(mat, type + ": " +
+                                   percentage + "%",
+                            topLeft, Core.FONT_HERSHEY_PLAIN, 1, new Scalar(0, 0, 0), 1);
+                    signConfirmer.get(type.getId()).seen();
+                }
+
+
+
             }
-            frameRecorder.stop();
-            frameGrabber.stop();
-        } catch (FrameGrabber.Exception e) {
-            e.printStackTrace();
-        } catch (FrameRecorder.Exception e) {
-            e.printStackTrace();
         }
+
+
+        for(int id : signConfirmer.keySet()) {
+            Sign sign = signConfirmer.get(id);
+            if(sign.isConfirmed()) {
+                for(int i = 0; i < sign.getType().getLimitationTypes().length; i++) {
+                    if(sign.getType().getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
+                        speedLimit = sign.getType();
+                    } else if(sign.getType().getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
+                        overtakeLimit = sign.getType();
+                    }
+                }
+            }
+            if(!sign.isChanged()) {
+                sign.notSeen();
+            }
+            signConfirmer.get(id).reset();
+        }
+
+
+        for(int i = 0; i < speedLimit.getLimitationTypes().length; i++) {
+            if(speedLimit.getLimitationTypes()[i].equals(LimitationType.SPEEDLIMIT)) {
+                Mat sign = speedLimit.getMats()[i];
+                Mat submat = mat.submat(new Rect(mat.cols()-(sign.cols()*2), mat.rows()-sign.rows(), sign.rows(), sign.cols()));
+                sign.copyTo(submat);
+            }
+        }
+
+        for(int i = 0; i < overtakeLimit.getLimitationTypes().length; i++) {
+            if(overtakeLimit.getLimitationTypes()[i].equals(LimitationType.OVERTAKELIMIT)) {
+                Mat sign = overtakeLimit.getMats()[i];
+                Mat submat = mat.submat(new Rect(mat.cols()-sign.cols(), mat.rows()-sign.rows(), sign.rows(), sign.cols()));
+                sign.copyTo(submat);
+            }
+        }
+
+        Frame editedFrame = openCVFrameConverter.convert(mat);
+        mat.release();
+        gray.release();
+        circles.release();
+        return editedFrame;
     }
 
 

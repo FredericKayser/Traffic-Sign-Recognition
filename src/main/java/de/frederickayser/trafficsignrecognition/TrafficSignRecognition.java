@@ -5,6 +5,7 @@ import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
 import de.frederickayser.trafficsignrecognition.file.ConfigurationHandler;
 import de.frederickayser.trafficsignrecognition.image.ImageTransformer;
 import de.frederickayser.trafficsignrecognition.neuralnetwork.NeuralNetwork;
+import de.frederickayser.trafficsignrecognition.trafficsign.Type;
 import de.frederickayser.trafficsignrecognition.util.Setting;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -38,15 +39,18 @@ public class TrafficSignRecognition {
         MessageBuilder.send(LOGGER, "System is starting...");
         ConfigurationHandler.getInstance().init();
         System.load(ConfigurationHandler.getInstance().getOpenCVLibaryPath());
+        Type.loadAllMats();
         ImageTransformer.loadHighestIds();
         CommandHandler.getInstance().registerCommand("convertvideo", new ConvertVideoCommand());
         CommandHandler.getInstance().registerCommand("preparedataset", new PrepareDatasetCommand());
         CommandHandler.getInstance().registerCommand("train", new TrainCommand());
         CommandHandler.getInstance().registerCommand("detectsigns", new DetectSignsCommand());
+        CommandHandler.getInstance().registerCommand("addframenumbers", new AddFrameNumbersCommand());
+        CommandHandler.getInstance().registerCommand("reloaddataset", new ReloadDatasetCommand());
         CommandHandler.getInstance().start();
 
         try {
-            neuralNetwork = new NeuralNetwork(Setting.IMAGE_SIZE, Setting.IMAGE_SIZE, 1, 10);
+            neuralNetwork = new NeuralNetwork(Setting.IMAGE_SIZE, Setting.IMAGE_SIZE, 1, 11, 200);
         } catch (IOException e) {
             e.printStackTrace();
         }

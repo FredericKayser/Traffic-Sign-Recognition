@@ -4,7 +4,6 @@ import de.frederickayser.trafficsignrecognition.console.MessageBuilder;
 import de.frederickayser.trafficsignrecognition.file.ConfigurationHandler;
 import de.frederickayser.trafficsignrecognition.trafficsign.Type;
 import de.frederickayser.trafficsignrecognition.util.Setting;
-import jdk.nashorn.internal.objects.annotations.Setter;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
