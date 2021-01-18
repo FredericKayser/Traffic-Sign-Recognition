@@ -35,7 +35,7 @@ public class SpeedtestCommand implements Command {
             long endTime = System.currentTimeMillis();
             long difference = endTime - startTime;
 
-            MessageBuilder.send(LOGGER, "Prediction took " + difference + " seconds.");
+            MessageBuilder.send(LOGGER, "Prediction took " + difference + " ms.");
 
             Probability[] probabilities = new Probability[output.length];
             for (int j = 0; j < output.length; j++) {
