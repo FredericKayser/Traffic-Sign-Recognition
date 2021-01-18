@@ -47,6 +47,7 @@ public class TrafficSignRecognition {
         CommandHandler.getInstance().registerCommand("detectsigns", new DetectSignsCommand());
         CommandHandler.getInstance().registerCommand("addframenumbers", new AddFrameNumbersCommand());
         CommandHandler.getInstance().registerCommand("reloaddataset", new ReloadDatasetCommand());
+        CommandHandler.getInstance().registerCommand("speedtest", new SpeedtestCommand());
         CommandHandler.getInstance().start();
 
         try {
